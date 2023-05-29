@@ -32,6 +32,22 @@ type sCake struct {
 	XmlName xml.Name    `json:"-" xml:"recipes"`
 }
 
+func readData(dataFromFile []byte, dataType string) sCake {
+	var cakes sCake
+
+	switch dataType {
+	case "json":
+		cakes = readJson(dataFromFile)
+	case "xml":
+		cakes = readXml(dataFromFile)
+	}
+	return cakes
+}
+
+type DBReader interface {
+	readData(dataFromFile []byte, dataType string) sCake
+}
+
 func showAllCommands() {
 	flag.PrintDefaults()
 	os.Exit(0)
@@ -91,12 +107,10 @@ func main() {
 	}
 	dataFromFile := getDataFromFile(fileName)
 	if len(fileName) > 3 && fileName[len(fileName)-4:] == "json" {
-		cakes = readJson(dataFromFile)
+		cakes = readData(dataFromFile, "json")
 		fmt.Println("cakes: ", cakes) //
-		// enc := json.Encoder(cakes)
 	} else if len(fileName) > 2 && fileName[len(fileName)-3:] == "xml" {
-		fmt.Println("extention: ", fileName[len(fileName)-3:]) //
-		cakes = readXml(dataFromFile)
+		cakes = readData(dataFromFile, "xml")
 		fmt.Println("cakes: ", cakes) //
 	} else {
 		fmt.Println("Error of enter of type")

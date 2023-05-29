@@ -11,17 +11,20 @@ import (
 )
 
 type sItem struct {
-	// XmlIngredients xml.Name `json:"-" xml:"item"`
 	ItemName  string `json:"ingredient_name" xml:"itemname"`
 	ItemCount string `json:"ingredient_count" xml:"itemcount"`
 	ItemUnit  string `json:"ingredient_unit,omitempty" xml:"itemunit"`
 }
 
+type sXmlIngredients struct {
+	Items []sItem `xml:"item"`
+}
+
 type sDataCake struct {
-	NameCake    string  `json:"name" xml:"name"`
-	TimeCake    string  `json:"time" xml:"stovetime"`
-	Ingredients []sItem `json:"ingredients" xml:"ingredients"`
-	// XmlIngredients xml.Name `json:"-" xml:"item"`
+	NameCake       string          `json:"name" xml:"name"`
+	TimeCake       string          `json:"time" xml:"stovetime"`
+	Ingredients    []sItem         `json:"ingredients" xml:"-"`
+	XMLIngredients sXmlIngredients `json:"-" xml:"ingredients"`
 }
 
 type sCake struct {
@@ -34,30 +37,33 @@ func showAllCommands() {
 	os.Exit(0)
 }
 
-func readJson(fileName string) sCake {
+func readJson(dataFromFile []byte) sCake {
 	var cakes sCake
-	dataFromFile, err := ioutil.ReadFile(fileName)
-	if err != nil && err != io.EOF {
-		_, err := fmt.Fprint(os.Stderr, "Error of reading *.json file\n")
-		if err != nil {
-			fmt.Println("Error of Fprint")
-			os.Exit(1)
-		}
-	}
+
 	if !json.Valid(dataFromFile) {
 		fmt.Println("json is not valid")
 		os.Exit(1)
 	}
-	err = json.Unmarshal(dataFromFile, &cakes)
+	err := json.Unmarshal(dataFromFile, &cakes)
 	if err != nil {
 		fmt.Println("err in Unmarshl:", err)
+		os.Exit(1)
 	}
 	return cakes
 }
 
-func readXml(fileName string) sCake {
+func readXml(dataFromFile []byte) sCake {
 	var cakes sCake
 
+	err := xml.Unmarshal(dataFromFile, &cakes)
+	if err != nil {
+		fmt.Println("err in Unmarshl:", err)
+		os.Exit(1)
+	}
+	return cakes
+}
+
+func getDataFromFile(fileName string) []byte {
 	dataFromFile, err := ioutil.ReadFile(fileName)
 	if err != nil && err != io.EOF {
 		_, err := fmt.Fprint(os.Stderr, "Error of reading *.xml file\n")
@@ -66,11 +72,7 @@ func readXml(fileName string) sCake {
 			os.Exit(1)
 		}
 	}
-	err = xml.Unmarshal(dataFromFile, &cakes)
-	if err != nil {
-		fmt.Println("err in Unmarshl:", err)
-	}
-	return cakes
+	return dataFromFile
 }
 
 func main() {
@@ -87,15 +89,14 @@ func main() {
 		fmt.Println("Enter name of file")
 		fmt.Scan(&fileName)
 	}
-	// fmt.Println("fileName: ", fileName) //
+	dataFromFile := getDataFromFile(fileName)
 	if len(fileName) > 3 && fileName[len(fileName)-4:] == "json" {
-		// fmt.Println("extention: ", fileName[len(fileName)-4:]) //
-		cakes = readJson(fileName)
+		cakes = readJson(dataFromFile)
 		fmt.Println("cakes: ", cakes) //
 		// enc := json.Encoder(cakes)
 	} else if len(fileName) > 2 && fileName[len(fileName)-3:] == "xml" {
 		fmt.Println("extention: ", fileName[len(fileName)-3:]) //
-		cakes = readXml(fileName)
+		cakes = readXml(dataFromFile)
 		fmt.Println("cakes: ", cakes) //
 	} else {
 		fmt.Println("Error of enter of type")

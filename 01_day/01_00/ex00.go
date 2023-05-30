@@ -25,14 +25,14 @@ import (
 // 	}`xml:"cake"`
 // }
 
+type JsonRecipes struct {
+	Cake []JsonCake `json:"cake"`
+}
+
 type JsonCake struct {
 	Name        string `json:"name"`
 	TimeCooking string `json:"time"`
 	Items       []Item `json:"ingredients"`
-}
-
-type JsonRecipes struct {
-	Cake []JsonCake `json:"cake"`
 }
 
 type Item struct {
@@ -56,7 +56,7 @@ type Recipes struct {
 	RecipesXml []Cake   `xml:"cake"`
 }
 
-type DBreader interface {
+type DBReader interface {
 	readDb([]byte) Recipes
 }
 

@@ -1,0 +1,15 @@
+/etc/stove/config.xml
+/Users/baker/recipes/database.xml
+/Users/baker/recipes/database_version3.yaml
+/var/log/orders.log
+/Users/baker/pokemon.avi
+/etc/stove/config2.xml
+/Users/baker/recipes/database2.xml
+/Users/baker/recipes/database_version32.yaml
+/var/log/orders2.log
+/Users/baker/pokemon2.avi
+/etc/stove/config3.xml
+/Users/baker/recipes/database3.xml
+/Users/baker/recipes/database_version315.yaml
+/var/log/orders14.log
+/Users/baker/pokemon22.avi

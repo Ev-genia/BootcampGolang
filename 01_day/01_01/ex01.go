@@ -10,14 +10,14 @@ import (
 	"os"
 )
 
+type JsonRecipes struct {
+	Cake []JsonCake `json:"cake"`
+}
+
 type JsonCake struct {
 	Name        string `json:"name"`
 	TimeCooking string `json:"time"`
 	Items       []Item `json:"ingredients"`
-}
-
-type JsonRecipes struct {
-	Cake []JsonCake `json:"cake"`
 }
 
 type Item struct {
@@ -101,17 +101,6 @@ func (x *xmlRead) readDb(dataFromFile []byte) Recipes {
 	return cakes
 }
 
-// func pushDataToFile(data []byte, fileNameWrite string) {
-// 	err := ioutil.WriteFile(fileNameWrite, data, 0777)
-// 	if err != nil && err != io.EOF {
-// 		_, err := fmt.Fprint(os.Stderr, "Error at writing\n")
-// 		if err != nil {
-// 			fmt.Println("Error of Writefile")
-// 			os.Exit(1)
-// 		}
-// 	}
-// }
-
 func getDataFromFile(fileName string) []byte {
 	dataFromFile, err := ioutil.ReadFile(fileName)
 	if err != nil && err != io.EOF {
@@ -123,25 +112,6 @@ func getDataFromFile(fileName string) []byte {
 	}
 	return dataFromFile
 }
-
-// func writeRecipe(recipes Recipes, typeWrite string, fileName string) {
-// 	if typeWrite == "Json" {
-// 		data, errwrite := json.MarshalIndent(convertXmlRecipeToJsonRecipe(recipes), "", "    ")
-// 		if errwrite == nil {
-// 			pushDataToFile(data, fileName)
-// 		} else {
-// 			fmt.Println("Error at Marshalling to Json")
-// 		}
-// 	} else if typeWrite == "Xml" {
-// 		data, errwrite := xml.MarshalIndent(recipes, "", "    ")
-// 		if errwrite == nil {
-// 			pushDataToFile(data, fileName)
-// 		} else {
-// 			fmt.Println("Error at Marshalling to Xml")
-// 		}
-// 		fmt.Printf("data: %s \n", string(data))
-// 	}
-// }
 
 func getXml(fileName string, x xmlRead, j jsonRead) Recipes {
 	var cakesXml Recipes
@@ -271,16 +241,26 @@ func comparison(cakesXmlOld Recipes, cakesXmlNew Recipes) {
 	}
 }
 
+func showAllCommands() {
+	flag.PrintDefaults()
+	os.Exit(0)
+}
+
 func main() {
 	var fileNameOld string
 	var fileNameNew string
 	x := xmlRead{}
 	j := jsonRead{}
+	var printUsage bool
 
 	// Обработка флагов
 	flag.StringVar(&fileNameOld, "old", "", "enter old base")
 	flag.StringVar(&fileNameNew, "new", "", "enter new base")
+	flag.BoolVar(&printUsage, "h", false, "show all commands")
 	flag.Parse()
+	if printUsage {
+		showAllCommands()
+	}
 	if fileNameOld == "" {
 		fmt.Println("Enter name of old base:")
 		fmt.Scan(&fileNameOld)

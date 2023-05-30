@@ -61,7 +61,6 @@ func (j *jsonRead) readDb(dataFromFile []byte) Recipes {
 		os.Exit(1)
 	}
 	cakes := convertJsonRecipeToXmlRecipe(cakesJson)
-	// fmt.Println("Это JSONREAD to XmlRecipe\n", cakes)
 	return cakes
 }
 
@@ -75,7 +74,6 @@ func convertJsonRecipeToXmlRecipe(jr JsonRecipes) Recipes {
 		tempXmlCake.Ingredients.Items = temp.Items
 		cakes.RecipesXml = append(cakes.RecipesXml, tempXmlCake)
 	}
-	// fmt.Print(cakes)
 	return cakes
 }
 
@@ -103,17 +101,16 @@ func (x *xmlRead) readDb(dataFromFile []byte) Recipes {
 	return cakes
 }
 
-func pushDataToFile(data []byte, fileNameWrite string) {
-	err := ioutil.WriteFile(fileNameWrite, data, 0777)
-	// fmt.Println(len(data))
-	if err != nil && err != io.EOF {
-		_, err := fmt.Fprint(os.Stderr, "Error at writing\n")
-		if err != nil {
-			fmt.Println("Error of Writefile")
-			os.Exit(1)
-		}
-	}
-}
+// func pushDataToFile(data []byte, fileNameWrite string) {
+// 	err := ioutil.WriteFile(fileNameWrite, data, 0777)
+// 	if err != nil && err != io.EOF {
+// 		_, err := fmt.Fprint(os.Stderr, "Error at writing\n")
+// 		if err != nil {
+// 			fmt.Println("Error of Writefile")
+// 			os.Exit(1)
+// 		}
+// 	}
+// }
 
 func getDataFromFile(fileName string) []byte {
 	dataFromFile, err := ioutil.ReadFile(fileName)
@@ -127,24 +124,24 @@ func getDataFromFile(fileName string) []byte {
 	return dataFromFile
 }
 
-func writeRecipe(recipes Recipes, typeWrite string, fileName string) {
-	if typeWrite == "Json" {
-		data, errwrite := json.MarshalIndent(convertXmlRecipeToJsonRecipe(recipes), "", "    ")
-		if errwrite == nil {
-			pushDataToFile(data, fileName)
-		} else {
-			fmt.Println("Error at Marshalling to Json")
-		}
-	} else if typeWrite == "Xml" {
-		data, errwrite := xml.MarshalIndent(recipes, "", "    ")
-		if errwrite == nil {
-			pushDataToFile(data, fileName)
-		} else {
-			fmt.Println("Error at Marshalling to Xml")
-		}
-		fmt.Printf("data: %s \n", string(data))
-	}
-}
+// func writeRecipe(recipes Recipes, typeWrite string, fileName string) {
+// 	if typeWrite == "Json" {
+// 		data, errwrite := json.MarshalIndent(convertXmlRecipeToJsonRecipe(recipes), "", "    ")
+// 		if errwrite == nil {
+// 			pushDataToFile(data, fileName)
+// 		} else {
+// 			fmt.Println("Error at Marshalling to Json")
+// 		}
+// 	} else if typeWrite == "Xml" {
+// 		data, errwrite := xml.MarshalIndent(recipes, "", "    ")
+// 		if errwrite == nil {
+// 			pushDataToFile(data, fileName)
+// 		} else {
+// 			fmt.Println("Error at Marshalling to Xml")
+// 		}
+// 		fmt.Printf("data: %s \n", string(data))
+// 	}
+// }
 
 func getXml(fileName string, x xmlRead, j jsonRead) Recipes {
 	var cakesXml Recipes
@@ -269,7 +266,6 @@ func comparison(cakesXmlOld Recipes, cakesXmlNew Recipes) {
 			}
 		}
 	}
-	fmt.Println("rez: ")
 	for _, r := range rez {
 		fmt.Print(r)
 	}
@@ -295,9 +291,5 @@ func main() {
 	}
 	cakesXmlOld := getXml(fileNameOld, x, j)
 	cakesXmlNew := getXml(fileNameNew, x, j)
-	// testold, _ := xml.MarshalIndent(cakesXmlOld, "", "    ")
-	// fmt.Printf("cakesXmlOld: %s \n", string(testold))
-	// testnew, _ := xml.MarshalIndent(cakesXmlNew, "", "    ")
-	// fmt.Printf("cakesXmlNew: %s \n", string(testnew))
 	comparison(cakesXmlOld, cakesXmlNew)
 }

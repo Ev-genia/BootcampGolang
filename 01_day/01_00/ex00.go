@@ -76,7 +76,6 @@ func (j *jsonRead) readDb(dataFromFile []byte) Recipes {
 		os.Exit(1)
 	}
 	cakes := convertJsonRecipeToXmlRecipe(cakesJson)
-	// fmt.Println("Это JSONREAD to XmlRecipe\n", cakes)
 	return cakes
 }
 
@@ -90,7 +89,6 @@ func convertJsonRecipeToXmlRecipe(jr JsonRecipes) Recipes {
 		tempXmlCake.Ingredients.Items = temp.Items
 		cakes.RecipesXml = append(cakes.RecipesXml, tempXmlCake)
 	}
-	// fmt.Print(cakes)
 	return cakes
 }
 
@@ -120,7 +118,6 @@ func (x *xmlRead) readDb(dataFromFile []byte) Recipes {
 
 func pushDataToFile(data []byte, fileNameWrite string) {
 	err := ioutil.WriteFile(fileNameWrite, data, 0777)
-	// fmt.Println(len(data))
 	if err != nil && err != io.EOF {
 		_, err := fmt.Fprint(os.Stderr, "Error at writing\n")
 		if err != nil {
@@ -160,22 +157,30 @@ func writeRecipe(recipes Recipes, typeWrite string, fileName string) {
 	}
 }
 
-func main() {
+func showAllCommands() {
+	flag.PrintDefaults()
+	os.Exit(0)
+}
 
+func main() {
 	var (
-		cakesXml Recipes
-		fileName string
-		x        = xmlRead{}
-		j        = jsonRead{}
+		cakesXml   Recipes
+		fileName   string
+		x          = xmlRead{}
+		j          = jsonRead{}
+		printUsage bool
 	)
 	// Обработка флагов
 	flag.StringVar(&fileName, "f", "", "enter of file ")
+	flag.BoolVar(&printUsage, "h", false, "show all commands")
 	flag.Parse()
+	if printUsage {
+		showAllCommands()
+	}
 	if fileName == "" {
 		fmt.Println("Enter name of file:")
 		fmt.Scan(&fileName)
 	}
-	// Чтение из файла в зависимости от типа файла
 	if len(fileName) > 3 && fileName[len(fileName)-4:] == "json" {
 		cakesXml = j.readDb(getDataFromFile(fileName))
 	} else if len(fileName) > 2 && fileName[len(fileName)-3:] == "xml" {

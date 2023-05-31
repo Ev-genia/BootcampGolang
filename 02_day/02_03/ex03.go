@@ -65,6 +65,10 @@ func main() {
 		showAllCommands()
 	}
 
+	if len(os.Args) < 2 {
+		fmt.Println("Error of count of arguments")
+		os.Exit(1)
+	}
 	if aFlag {
 		if len(os.Args) < 4 {
 			fmt.Println("Error of count of arguments")

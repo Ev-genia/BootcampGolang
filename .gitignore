@@ -1,5 +1,4 @@
 .idea
-go.mod
 .DS_Store
 *.json
 *.xml

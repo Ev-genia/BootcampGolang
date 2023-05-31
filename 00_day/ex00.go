@@ -120,6 +120,15 @@ func makeMode(nbrsMap map[int]int) {
 		return nbrsArr[i].val > nbrsArr[j].val
 	})
 	mode := nbrsArr[0]
+	// var mode int
+	// max := 0
+	// for _, i := range nbrsArr {
+	// 	freq := nbrsMap[i.key]
+	// 	if freq > max {
+	// 		mode = i.key
+	// 		max = freq
+	// 	}
+	// }
 	fmt.Println("Mode: ", mode.key)
 }
 

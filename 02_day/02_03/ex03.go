@@ -11,16 +11,6 @@ import (
 	"time"
 )
 
-// Run "tar -czvf (archive name).tar.gz (pathtofile)” in the Terminal
-// to compress a file or folder.
-// tar xf archive.tar.gz  # for .tar.gz files
-
-// tar [-ключи] [название архива, который будет создан] [что паковать\куда паковать]
-// с (create) - создать файл архива
-// v (verbose) - показать информацию о выполнении
-// f (file) - указывает что нужно создавать файл с именем, которое задается после ключей (в нашем примере file.tar или file.tar.gz), если не указать этот ключ, то будет использовано имя по умолчанию или возникнут проблемы.
-// z (gzip) - архивировать файл с помощью gzip
-
 func showAllCommands() {
 	flag.PrintDefaults()
 	os.Exit(0)
@@ -49,17 +39,13 @@ func executorA(path string, pathDest string) {
 		os.Exit(1)
 	}
 	pathArr := strings.Split(path, "/")
-	fmt.Println("pathArr[end]: ", pathArr[len(pathArr)-1])
 	fileName := pathArr[len(pathArr)-1]
-	nameWithOutExt := fileName[:len(fileName)-len(filepath.Ext(fileName))]
-	fmt.Println("nameWithOutExt", nameWithOutExt)
 	if pathDest[len(pathDest)-1] != '/' {
 		pathDest += "/"
 	}
 	now := time.Now()
 	sec := now.Unix()
 	nameArh := pathDest + fileName[:len(fileName)-len(filepath.Ext(fileName))] + "_" + strconv.FormatInt(sec, 10) + ".tar.gz"
-	fmt.Println("nameArh", nameArh)
 	cmd := exec.Command("tar", "-czf", nameArh, path)
 	cmd.Stderr = os.Stderr
 	cmd.Run()
@@ -91,7 +77,7 @@ func main() {
 		}
 		pathArr = os.Args[3:]
 		for _, path := range pathArr {
-			executorA(path, pathDest)
+			go executorA(path, pathDest)
 		}
 	} else {
 		pathArr = os.Args[1:]

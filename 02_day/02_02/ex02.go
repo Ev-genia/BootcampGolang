@@ -20,14 +20,6 @@ func main() {
 	}
 	pathScanner := bufio.NewScanner(os.Stdin)
 	for pathScanner.Scan() {
-		// line, err := reader.ReadString('\n')
-		// if err != nil {
-		// 	log.Fatal("Error reading: ", err)
-		// }
-		// line = strings.TrimSpace(line)
-		// if len(line) == 0 {
-		// 	break
-		// }
 		line := pathScanner.Text()
 		if len(line) == 0 {
 			break

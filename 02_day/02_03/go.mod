@@ -1,3 +1,3 @@
-module 02_03
+module myRotate
 
 go 1.20

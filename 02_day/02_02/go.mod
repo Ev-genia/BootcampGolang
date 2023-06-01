@@ -1,3 +1,3 @@
-module 02_02
+module myXargs
 
 go 1.20

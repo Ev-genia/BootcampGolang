@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"os"
 	"os/exec"
@@ -16,6 +17,10 @@ func main() {
 	} else {
 		cmdStr = os.Args[1]
 		args = os.Args[2:]
+	}
+	pathScanner := bufio.NewScanner(os.Stdin)
+	for pathScanner.Scan() {
+		args = append(args, pathScanner.Text())
 	}
 	cmd := exec.Command(cmdStr, args...)
 	if errors.Is(cmd.Err, exec.ErrDot) {

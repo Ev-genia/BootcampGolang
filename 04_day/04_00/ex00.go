@@ -33,7 +33,7 @@ type sPropertiesS struct {
 }
 
 type sPropertiesF struct {
-	Error string `json:"error,omitempty"`
+	Error string `json:"error"`
 }
 
 type sCandy struct {
@@ -66,8 +66,7 @@ func success(w http.ResponseWriter, ret sPropertiesS, diff int) {
 }
 
 func getType(candies []sCandy, candyType string) int {
-	numType := 0
-
+	numType := -1
 	for i, val := range candies {
 		if val.CandyType == candyType {
 			numType = i
@@ -77,7 +76,7 @@ func getType(candies []sCandy, candyType string) int {
 	return numType
 }
 
-func getData(r *http.Request, elem *Required) {
+func getData(r *http.Request, elem *Required, w http.ResponseWriter) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error with ReadAll: %s\n", err)
@@ -85,26 +84,26 @@ func getData(r *http.Request, elem *Required) {
 	err = json.Unmarshal(body, &elem)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error Unmarshal: %s\n", err)
+		fmt.Fprintf(w, "invalid input Data")
 	}
+	return err
 }
 
 func noMoney(w http.ResponseWriter, ret sPropertiesF, diff int) {
 	diff *= -1
-	respSrt := "You need { " + strconv.Itoa(diff) + " } more money!\n"
+	ret.Error = "You need " + strconv.Itoa(diff) + " more money!"
 	w.WriteHeader(http.StatusPaymentRequired)
-	ret.Error = "not enough money"
 	byteRestp, err := json.Marshal(ret)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error with json.Marshal: %s\n", err)
 	}
-	fmt.Fprintf(os.Stderr, "%s\n", byteRestp)
-	w.Write([]byte(respSrt))
+	w.Write(byteRestp)
 }
 
 func errorCase(w http.ResponseWriter, numType int, ret sPropertiesF) {
 	w.WriteHeader(http.StatusBadRequest)
-	if numType == 0 {
-		ret.Error = "Error type candy\n"
+	if numType == -1 {
+		ret.Error = "Error type candy"
 	} else {
 		ret.Error = "Error count candy"
 	}
@@ -122,10 +121,13 @@ func buyCandy(w http.ResponseWriter, r *http.Request) {
 
 	candies := make([]sCandy, 5, 5)
 	candyArrInit(candies)
-	getData(r, &elem)
+	err := getData(r, &elem, w)
+	if err != nil {
+		return
+	}
 	numType := getType(candies, elem.CandyType)
 	w.Header().Set("Content-Type", "application/json")
-	if numType != 0 && elem.CandyCount > 0 {
+	if numType != -1 && elem.CandyCount > 0 {
 		diff := elem.Money - elem.CandyCount*candies[numType].Price
 		if diff >= 0 {
 			success(w, retS, diff)

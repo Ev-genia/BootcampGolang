@@ -38,7 +38,7 @@ func recursiveFind(pathArg string, typeFind string, extArg string) {
 				fmt.Println(path)
 			}
 		}
-		if (fi.Mode()&fs.ModeSymlink != 0) && typeFind == "sl" {
+		if (fi.Mode()&fs.ModeSymlink != 0) && (typeFind == "sl" || typeFind == "") {
 			eval, err := filepath.EvalSymlinks(fi.Name())
 			if err != nil && os.IsNotExist(err) {
 				fmt.Printf("%s -> [broken]\n", path)

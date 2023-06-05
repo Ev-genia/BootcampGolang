@@ -18,13 +18,10 @@ func restoreAnswer(dynamic [][]int, items []Present, countItems int, capacity in
 		err := errors.New("No one item doesn't enter in bag")
 		return err
 	}
-	// fmt.Println("*********")
-	// fmt.Println("dynamic[countItems-1][capacity]: ", dynamic[countItems-1][capacity], ", dynamic[countItems][capacity]: ", dynamic[countItems][capacity])
 	if dynamic[countItems-1][capacity] == dynamic[countItems][capacity] {
 		restoreAnswer(dynamic, items, countItems-1, capacity, rez)
 	} else {
 		restoreAnswer(dynamic, items, countItems-1, capacity-items[countItems-1].Size, rez)
-		// fmt.Println("items[countItems-1]: ", items[countItems-1])
 		*rez = append(*rez, items[countItems-1])
 	}
 	return nil
@@ -32,7 +29,6 @@ func restoreAnswer(dynamic [][]int, items []Present, countItems int, capacity in
 
 func grabPresents(items []Present, capacity int) []Present {
 	coolPresents := []Present{}
-	// fmt.Println("dynamic: ")
 	dynamic := make([][]int, len(items)+1)
 	for i := 0; i < len(items)+1; i++ {
 		dynamic[i] = make([]int, capacity+1)
@@ -46,26 +42,17 @@ func grabPresents(items []Present, capacity int) []Present {
 					dynamic[i][j] = dynamic[i-1][j]
 				}
 			}
-			// fmt.Print(dynamic[i][j], " ")
 		}
-		// fmt.Println()
 	}
-	// maxCost := dynamic[len(items)][capacity]
-	// fmt.Println("maxCost: ", maxCost)
-	// nums := make([]int, 5)
 	err := restoreAnswer(dynamic, items, len(items), capacity, &coolPresents)
 	if err != nil {
 		log.Fatal("No one item doesn't enter in bag")
 	}
-
-	// for _, val := range nums {
-	// 	coolPresents = append(coolPresents, items[val])
-	// }
 	return coolPresents
 }
 
 func readData() (data []Present) {
-	fmt.Println("Enter two number: value and size of present. For exit enter 0 0")
+	fmt.Println("Enter two number: value and size of present. Enter 0 0 for exit")
 	var elem Present
 	for {
 		_, err := fmt.Scanf("%d %d", &elem.Value, &elem.Size)
@@ -82,11 +69,10 @@ func readData() (data []Present) {
 
 func main() {
 	var capacity int
-	fmt.Println("Enter capacity:")
+	fmt.Println("Enter capacity of knapsack:")
 	fmt.Scan(&capacity)
-	// items := []Present{{30, 6}, {14, 3}, {16, 4}, {9, 2}} //{} //
+	// items := []Present{{30, 6}, {14, 3}, {16, 4}, {9, 2}}
 	items := readData()
-
 	bag := grabPresents(items, capacity)
 	fmt.Println(bag)
 }

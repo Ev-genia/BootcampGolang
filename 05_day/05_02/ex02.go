@@ -51,7 +51,7 @@ func (pq *PriorityQueue) update(item *Item, present Present, priority int) {
 }
 
 func readData() (data []Present) {
-	fmt.Println("Enter two number: value and size of present. For exit enter 0 0")
+	fmt.Println("Enter two number: value and size of present. Enter 0 0 for exit")
 	var elem Present
 	for {
 		_, err := fmt.Scanf("%d %d", &elem.Value, &elem.Size)
@@ -92,7 +92,6 @@ func getNCoolestPresents(items []Present, n int) (coolestPresents []Present, err
 	i = 0
 	for pq.Len() > 0 {
 		item := heap.Pop(&pq).(*Item)
-		fmt.Printf("%.2d:%d\n", item.priority, item.value)
 		if i < n {
 			coolestPresents = append(coolestPresents, item.value)
 		}
@@ -103,16 +102,10 @@ func getNCoolestPresents(items []Present, n int) (coolestPresents []Present, err
 
 func main() {
 	var n int
-	fmt.Println("Enter n:")
+	fmt.Println("Enter count of first prestnts - n:")
 	fmt.Scan(&n)
-
-	// items := []Present{{5, 2}, {4, 5}, {5, 3}, {5, 1}} //{} //
+	// items := []Present{{5, 2}, {4, 5}, {5, 3}, {5, 1}}
 	items := readData()
-
-	for _, val := range items {
-		fmt.Println("item.val: ", val.Value, ", item.size: ", val.Size)
-	}
-
 	rez, err := getNCoolestPresents(items, n)
 	if err != nil {
 		log.Fatal("Error of getting coolest presents: %s\n", err)

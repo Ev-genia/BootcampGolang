@@ -1,0 +1,11 @@
+{{template "base" .}}
+ 
+{{define "title"}}Домашняя страницы{{end}}
+ 
+{{define "main"}}
+<form  type="post" action="/snippet/create">
+    Имя: <input type="text" name="name"><br>
+    Заметка: <input  class="snip" type="textarea" name="snippet"><br>
+    <button type="submit">Отправить</button>
+</form>
+{{end}}

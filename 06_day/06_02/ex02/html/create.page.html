@@ -1,0 +1,12 @@
+{{template "base" .}}
+ 
+{{define "title"}}Домашняя страницы{{end}}
+ 
+{{define "main"}}
+<h2>Добавлениие нового поста</h2>
+<form  method="post" action="/snippet/write">
+    Название: <input type="text" name="name"><br><br>
+    Текст: <textarea name="snippet" height = "300"></textarea><br>
+    <button type="submit">Отправить</button>
+</form>
+{{end}}

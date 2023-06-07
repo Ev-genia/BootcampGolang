@@ -1,0 +1,12 @@
+{{template "base" .}}
+ 
+{{define "title"}}Домашняя страницы{{end}}
+ 
+{{define "main"}}
+<div align="center">
+<h5>Запись блога успешно создана</h5><br>
+<a href="/admin">Вернуться на страницу авторизации</a><br>
+<a href="/">Вернуться на домашнюю страницу</a><br>
+<a href="/snippet/create?name=Anton&password=12345">Перейти к редактированию следующего поста</a>
+</div>
+{{end}}

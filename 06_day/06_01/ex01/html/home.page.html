@@ -1,0 +1,33 @@
+{{template "base" .}}
+ 
+{{define "title"}}Домашняя страницы{{end}}
+ 
+{{define "main"}}
+<h2>Последние заметки</h2>
+<div align="center">
+    <div {{ .Hidden0}} width="30%" margin-bottom: 30px padding-bottom: 30px>
+        <h3 align="left">{{ .Name0}}</h3>
+        <p align="justify">
+          {{ .Content0}}
+        </p>
+        <div align="right"><a href="/showpost?id={{ .Id0}}&page={{ .Page}}" align="right">Читать дальше</a><br><br></div>
+    </div>
+    <div {{ .Hidden1}} width="30%" margin-bottom: 30px padding-bottom: 30px>
+      <h3 align="left">{{ .Name1}}</h3>
+      <p align="justify">
+        {{ .Content1}}
+      </p>
+      <div align="right"><a href="/showpost?id={{ .Id1}}&page={{ .Page}}" align="right">Читать дальше</a><br><br></div>
+  </div>
+  <div {{ .Hidden2}} width="30%" margin-bottom: 30px padding-bottom: 30px>
+    <h3 align="left">{{ .Name2}}</h3>
+    <p align="justify">
+      {{ .Content2}}
+    </p>
+    <div align="right"><a href="/showpost?id={{ .Id2}}&page={{ .Page}}" align="right">Читать дальше</a><br><br></div>
+</div>
+    <a {{ .HiddenPrev}} href="/?page={{ .PagePrev}}" align="right">&#60;&#60; к более новым</a>
+     Страница {{ .Page}} 
+    <a {{ .HiddenNext}} href="/?page={{ .PageNext}}" align="right">к более старым &#62;&#62;</a><br><br>
+</div>    
+{{end}}

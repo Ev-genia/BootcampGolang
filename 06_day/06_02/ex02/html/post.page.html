@@ -1,0 +1,15 @@
+{{template "base" .}}
+ 
+{{define "title"}}Домашняя страницы{{end}}
+ 
+{{define "main"}}
+<h2>{{ .Name}}</h2>
+<div align="center" height="100%">
+    <div width="30%" margin-bottom: 30px padding-bottom: 30px>
+        <p align="justify">
+            {{ .Content}}
+        </p>
+    </div> 
+    <div valign="bottom"><a href="/?page={{ .Page}}" align="right"> назад </a><br><br></div>
+</div>    
+{{end}}

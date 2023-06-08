@@ -1,0 +1,45 @@
+<!doctype html><html lang='ru'><head><meta charset='utf-8'><title>Documentation for package main imported as docToHtml</title></head><body><div align="left" ><p>package main // import &ldquo;docToHtml&rdquo;</p>
+
+<p>Package docToHtml is read stdin and create Html file from data. Write it to new
+file.</p>
+
+<p>FUNCTIONS</p>
+
+<p>func BuildHtmlPage(p *Names, strByte []byte) []byte</p>
+
+<pre><code>Building HTML page
+</code></pre>
+
+<p>func MdToHTML(md []byte) []byte</p>
+
+<pre><code>Outside parser MD
+</code></pre>
+
+<p>func ReadStdin() (strByte []byte)</p>
+
+<pre><code>Read data from Stdin and write it to strByte([]byte)
+</code></pre>
+
+<p>func main()</p>
+
+<pre><code>Main goroutine
+</code></pre>
+
+<p>TYPES</p>
+
+<p>type Names struct {</p>
+
+<pre><code>PackageValue string // package name
+ImportValue  string // import name
+</code></pre>
+
+<p>}</p>
+
+<pre><code>Struct for read package and import names from Comments.
+</code></pre>
+
+<p>func (n *Names) NamesScan(str string)</p>
+
+<pre><code>Scan string for package and import names
+</code></pre>
+</div></body></html>

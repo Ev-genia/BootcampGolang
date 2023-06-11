@@ -6,16 +6,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"team01/node"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -34,6 +36,12 @@ type Client struct {
 	port           string
 	currentSwarm   *node.Swarm
 	currentCommand Command
+	Mu             sync.Mutex
+}
+
+type NodeStruct struct {
+	key   string
+	value *node.Node
 }
 
 func getCommand() (isInputCorrect, stopReading bool, command *Command) {
@@ -59,33 +67,40 @@ func getCommand() (isInputCorrect, stopReading bool, command *Command) {
 		if err != io.EOF {
 			_, err := fmt.Fprint(os.Stderr, "Empty value.\n")
 			if err != nil {
-				return
+				return false, true, nil
 			}
 		}
 		isInputCorrect = false
 	} else if isInputCorrect {
-		stringsFields := strings.Fields(input)
+		stringsFields := strings.SplitN(input, " ", 3)
 		if len(stringsFields) < 2 {
 			_, err = fmt.Fprint(os.Stderr, "Wrong command value.\n")
 			if err != nil {
-				return
+				return false, true, nil
 			}
 		} else {
 			if stringsFields[0] == get || stringsFields[0] == set || stringsFields[0] == del {
 				args := stringsFields[1:]
 
+				// fmt.Println("len args: ", len(args))
+				// fmt.Println("args: ")
+				// for _, val := range args {
+				// 	fmt.Println(val)
+				// }
+				// fmt.Println()
 				if (stringsFields[0] == get || stringsFields[0] == del) && len(args) != 1 {
-					_, err = fmt.Fprint(os.Stderr, "Wrong command arguments count.\n")
+					_, err = fmt.Fprint(os.Stderr, "Wrong command arguments count1.\n")
 					if err != nil {
-						return
+						return false, true, nil
 					}
 				} else if stringsFields[0] == set && len(args) != 2 {
-					_, err = fmt.Fprint(os.Stderr, "Wrong command arguments count.\n")
+					_, err = fmt.Fprint(os.Stderr, "Wrong command arguments count2.\n")
 					if err != nil {
-						return
+						return false, true, nil
 					}
 				} else if !isUUID4(args[0]) {
 					_, err = fmt.Fprint(os.Stderr, "Error: Key is not a proper UUID4\n")
+					return false, true, nil
 				} else {
 					command = &Command{
 						Action: stringsFields[0],
@@ -95,7 +110,7 @@ func getCommand() (isInputCorrect, stopReading bool, command *Command) {
 			} else {
 				_, err = fmt.Fprint(os.Stderr, "Unsupported command.\n")
 				if err != nil {
-					return
+					return false, true, nil
 				}
 			}
 		}
@@ -103,31 +118,27 @@ func getCommand() (isInputCorrect, stopReading bool, command *Command) {
 	return
 }
 
-func getUrl() (urlS string) {
-
-	return urlS
-}
-
-func (c Client) printKnownNodes(swarm node.Swarm) {
-	fmt.Println(swarm)
-	fmt.Printf("Connected to a database of Warehouse 13 at %s\n", swarm.ThisNode.Addr)
+func (c Client) printKnownNodes() {
+	fmt.Printf("Connected to a database of Warehouse 13 at %s:%s\n", c.host, c.port)
 	fmt.Println("Known nodes:")
-	for _, val := range swarm.Nodes {
-		fmt.Printf("%v\n", val.Addr)
+	c.Mu.Lock()
+	nodes := c.currentSwarm.Nodes
+	c.Mu.Unlock()
+	for _, val := range nodes {
+		fmt.Printf("%v\n", (*val).Addr)
 	}
 }
 
 func (c Client) getServer() (swarm node.Swarm, err error) {
 	client := &http.Client{}
 
-	resp, err := client.Get("http://" + c.host + ":" + c.port + "/getHeartBeat")
+	resp, err := client.Get("http://" + c.host + ":" + c.port + "/getServer")
 	if err != nil {
 		fmt.Println("Error from getServer: ", err)
 		return swarm, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	fmt.Println(string(body))
 	if err != nil {
 		fmt.Println("Error from getServer: ", err)
 		return swarm, err
@@ -137,24 +148,74 @@ func (c Client) getServer() (swarm node.Swarm, err error) {
 }
 
 func (c Client) setRecord() error {
+	c.Mu.Lock()
+	nodes := c.currentSwarm.Nodes
+	c.Mu.Unlock()
 	client := &http.Client{}
+	// SET 0d5d3807-5fbf-4228-a657-5a091c4e497f '{"name": "Chapayev's Mustache comb"}'
+	var setNodes []string
+	for serverAddr, server := range nodes {
+		getStr := "{\"command\": \"GET\", \"args\": [\"" + c.currentCommand.Args[0] + "\"]}"
+		// fmt.Println("getStr: ", getStr)
+		// fmt.Println("address: ", (*server).Addr)
+		req, err := http.NewRequest(get, "http://"+(*server).Addr+"/findRecord", bytes.NewBufferString(getStr))
+		if err != nil {
+			log.Println("Error: ", err)
+			return err
+		}
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if resp.StatusCode == 200 {
+			setNodes = append(setNodes, serverAddr)
+		}
+	}
+	// sorting map of nodes
+	var nodesStruct []NodeStruct
+	for key, val := range nodes {
+		nS := &NodeStruct{
+			key:   key,
+			value: val,
+		}
+		nodesStruct = append(nodesStruct, *nS)
+	}
+	// slices.Sort(nodesStruct, func(i, j int) bool {
+	// 	return nodesStruct[i].value.RecordsCount < nodesStruct[j].value.RecordsCount
+	// })
+	sort.Slice(nodesStruct, func(i, j int) bool {
+		return nodesStruct[i].value.RecordsCount < nodesStruct[j].value.RecordsCount
+	})
+	if len(nodesStruct) >= 2 {
+		for i, val := range nodesStruct {
+			if i < 2 {
+				setNodes = append(setNodes, val.key)
+			}
+		}
+	}
 
-	body, err := json.Marshal(c.currentCommand)
-	// fmt.Println("body: ", body)
-	req, err := http.NewRequest(set, "http://"+c.host+":"+c.port+"/setRecord", bytes.NewBuffer(body))
-	if err != nil {
-		fmt.Println("Error in Set request: ", err)
-		return err
+	// send set request to server
+	for _, server := range setNodes {
+		body, err := json.Marshal(c.currentCommand)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		bodyReader := bytes.NewReader(body)
+		req, err := http.NewRequest(set, "http://"+server+"/setRecord", bodyReader)
+		if err != nil {
+			log.Println("Error: ", err)
+			return err
+		}
+		req.Header.Add("Content-Type", "application/json")
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Println("Request wasn't send: ", err)
+			return err
+		}
 	}
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Request wasn't send: ", err)
-		return err
-	}
-	defer resp.Body.Close()
+	fmt.Printf("Created (%d replicas)\n", len(setNodes))
 	return nil
 }
+
 func (c Client) getHeartBeat() error {
 	swarmInfo, err := c.getServer()
 	if err != nil {
@@ -177,10 +238,18 @@ func (c Client) getHeartBeat() error {
 }
 
 func (c Client) getRecord() (statusCode int, value node.Record) {
-	for _, server := range c.currentSwarm.Nodes {
+	c.Mu.Lock()
+	nodes := c.currentSwarm.Nodes
+	c.Mu.Unlock()
+	for _, server := range nodes {
 		client := &http.Client{}
 		body, err := json.Marshal(c.currentCommand)
-		req, err := http.NewRequest(get, "http://"+server.Addr+"/findRecord", bytes.NewBuffer(body))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		bodyReader := bytes.NewReader(body)
+		req, err := http.NewRequest(get, "http://"+server.Addr+"/findRecord", bodyReader)
 		if err != nil {
 			log.Println("Error: ", err)
 			return
@@ -202,11 +271,11 @@ func (c Client) getRecord() (statusCode int, value node.Record) {
 			json.Unmarshal(body, &value)
 			break
 		}
-		fmt.Println("value json: ", value)
+		// fmt.Println("value json: ", value)
 	}
 	if statusCode == 0 {
 		value.Value = "Not found"
-		return 404, value
+		statusCode = 404
 	}
 	return statusCode, value
 }
@@ -258,20 +327,16 @@ func isUUID4(str string) bool {
 }
 
 func main() {
-	// parse args and connect to node
-
 	// create a new client
 	client := newClient()
 
-	// client.getHostPort() //string - "127.0.0.1", string "8765"
-
-	//first connect to server - getting info about servers of Swarm
+	//first connect to node - getting info about servers of Swarm
 	swarmInfo, err := client.getServer()
 	if err != nil {
 		log.Fatalln("Error on server")
 	}
-	client.printKnownNodes(swarmInfo)
 	client.currentSwarm = &swarmInfo
+	client.printKnownNodes()
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -293,10 +358,11 @@ func main() {
 	for {
 		isInputCorrect, stopReading, command := getCommand()
 		// fmt.Println("main | command: ", command.Action)
+		// fmt.Println("isInputCorrect: ", isInputCorrect)
 		if isInputCorrect {
 			// command execute
+			// fmt.Println("command: ", (*command).Action)
 			client.currentCommand = *command
-
 			switch client.currentCommand.Action {
 			case get:
 				log.Println("Get request")
@@ -307,23 +373,22 @@ func main() {
 					fmt.Println(value)
 				case 404:
 					fmt.Println("Record not found")
-					return
+					continue
 				}
-
 			case set:
 				log.Println("Set request")
 				//set
-				// err := client.Set()
-				// if err != nil {
-				// 	fmt.Println("Error in Set request: ", err)
-				// 	return
-				// }
+				err := client.setRecord()
+				if err != nil {
+					fmt.Println("Error in Set request: ", err)
+					continue
+				}
 			case del:
 				log.Println("Delete request")
 				//delete
 			default:
 				fmt.Println("Unknown command, you can use only GET, SET, DELETE methods")
-				break
+				continue
 			}
 		}
 		if stopReading {

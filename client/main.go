@@ -4,16 +4,15 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
+	"sync"
 	"team01/node"
+	"time"
 )
 
 const (
@@ -23,8 +22,8 @@ const (
 )
 
 type Command struct {
-	Action string
-	Args   []string
+	Action string   `json:"command"`
+	Args   []string `json:"args"`
 }
 
 type Client struct {
@@ -71,6 +70,7 @@ func getCommand() (isInputCorrect, stopReading bool, command *Command) {
 		} else {
 			if stringsFields[0] == get || stringsFields[0] == set || stringsFields[0] == del {
 				args := stringsFields[1:]
+
 				if (stringsFields[0] == get || stringsFields[0] == del) && len(args) != 1 {
 					_, err = fmt.Fprint(os.Stderr, "Wrong command arguments count.\n")
 					if err != nil {
@@ -81,8 +81,6 @@ func getCommand() (isInputCorrect, stopReading bool, command *Command) {
 					if err != nil {
 						return
 					}
-				} else if !isUUID4(args[0]) {
-					_, err = fmt.Fprint(os.Stderr, "Error: Key is not a proper UUID4\n")
 				} else {
 					command = &Command{
 						Action: stringsFields[0],
@@ -113,10 +111,10 @@ func (c Client) printKnownNodes(swarm node.Swarm) {
 	}
 }
 
-func (c Client) Get() (swarm node.Swarm, err error) {
+func (c Client) getServer() (swarm node.Swarm, err error) {
 	client := &http.Client{}
 
-	resp, err := client.Get("https://" + c.host + ":" + c.port + "/getHeartBeat")
+	resp, err := client.Get("https://" + c.host + ":" + c.port + "/getServer")
 	if err != nil {
 		fmt.Println("Error from Get method: ", err)
 		return swarm, err
@@ -131,15 +129,12 @@ func (c Client) Get() (swarm node.Swarm, err error) {
 	return swarm, nil
 }
 
-func (c Client) Set() error {
+func (c Client) setRecord() error {
 	client := &http.Client{}
 
-	body := ""
-	for _, arg := range c.currentCommand.Args {
-		body = body + arg + "&"
-	}
+	body, err := json.Marshal(c.currentCommand)
 	fmt.Println("body: ", body[:len(body)-1])
-	req, err := http.NewRequest(set, "http://"+c.host+":"+c.port+"/setRequest", bytes.NewBufferString(body[:len(body)-1]))
+	req, err := http.NewRequest(set, "http://"+c.host+":"+c.port+"/setRecord", bytes.NewBuffer(body))
 	if err != nil {
 		fmt.Println("Error in Set request: ", err)
 		return err
@@ -154,67 +149,49 @@ func (c Client) Set() error {
 	return nil
 }
 
-func newClient() Client {
-	var host, port string
-
-	hostUsageStr := "host to listen (must be ip or hostname)"
-	portUsageStr := "port to listen (must be 1-65535)"
-
-	flag.StringVar(&host, "H", "", hostUsageStr)
-	flag.StringVar(&port, "P", "", portUsageStr)
-	flag.Parse()
-	stop := port == ""
-	if stop == false {
-		iPort, err := strconv.Atoi(port)
-		if err != nil {
-			stop = true
-		} else if iPort < 1 || iPort > 65535 {
-			stop = true
-		}
-		stop = false
-	}
-
-	if stop {
-		fmt.Printf("Usage %s:\n", os.Args[0])
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
-	client := Client{
-		host: host,
-		port: port,
-	}
-
-	return client
-}
-
-func isUUID4(str string) bool {
-	key, err := uuid.ParseBytes([]byte(str))
+func (c Client) getHeartBeat() error {
+	swarmInfo, err := c.getServer()
 	if err != nil {
-		return false
+		log.Println("Error on server: ", err)
+		return err
 	}
-	v := key.Version()
-	if v != uuid.Version(byte(4)) {
-		return false
-	}
-	return true
+	c.currentSwarm = &swarmInfo
+	return nil
 }
 
 func main() {
+	// parse args and connect to node
 
 	// create a new client
-	client := newClient()
+	client := Client{
+		host: "127.0.0.1",
+		port: "8765",
+	}
 
-	// getHostPort() //string - "127.0.0.1", string "8765"
+	client.getHostPort() //string - "127.0.0.1", string "8765"
 
 	//first connect to server - getting info about servers of Swarm
-	//swarmInfo, err := client.Get()
-	//if err != nil {
-	//	log.Fatalln("Error on server")
-	//}
-	//client.printKnownNodes(swarmInfo)
+	swarmInfo, err := client.getServer()
+	if err != nil {
+		log.Fatalln("Error on server")
+	}
+	client.printKnownNodes(swarmInfo)
 
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
 	// goroutine that receives heartbeats and changes nodes
+	go func(wg *sync.WaitGroup) {
+		ticker := time.Tick(time.Second)
+		for {
+			//log.Println("Отправка heartbeat сигнала нодам")
+			<-ticker
+			err := client.getHeartBeat()
+			if err != nil {
+				break
+			}
+		}
+		wg.Done()
+	}(wg)
 
 	// command execution loop
 	for {
@@ -228,12 +205,12 @@ func main() {
 			case get:
 				log.Println("Get request")
 				//get
-				swarm, err := client.Get()
-				if err != nil {
-					fmt.Println("Error in Get request: ", err)
-					return
-				}
-				client.currentSwarm = &swarm
+				statusCode := client.getRecord()
+				// if err != nil {
+				// 	fmt.Println("Error in Get request: ", err)
+				// 	return
+				// }
+				// client.currentSwarm = &swarm
 			case set:
 				log.Println("Set request")
 				//set
@@ -255,5 +232,5 @@ func main() {
 			break
 		}
 	}
-
+	wg.Wait()
 }

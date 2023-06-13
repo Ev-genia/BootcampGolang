@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+/*
+go test -bench=. -cpuprofile cpu.out
+go tools pprof cpu.out
+	output=top10.txt
+	top10
+	exit
+*/
+
 func BenchmarkMinCoins(b *testing.B) {
 	allSum := []int{247, 554, 1108, 2216, 4432, 8864}
 	want := []int{100, 50, 10, 5, 1}
@@ -28,11 +36,3 @@ func BenchmarkMinCoins2(b *testing.B) {
 		})
 	}
 }
-
-/*
-go test -bench=. -cpuprofile cpu.out
-go tool pprof cpu.out
-  output=top10.txt
-  top 10
-  exit
-*/

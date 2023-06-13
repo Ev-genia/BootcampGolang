@@ -27,9 +27,9 @@ func (u UnknownPlant) ReadWrite() {
 	typeOfU := s.Type()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
-		tagExist := typeOfU.Field(i).Tag.Get("unit")
+		tagExist := typeOfU.Field(i).Tag.Get("color_scheme")
 		if tagExist != "" {
-			fmt.Printf("%s(unit=%v): %v,\n", typeOfU.Field(i).Name, tagExist, f.Interface())
+			fmt.Printf("%s(color_scheme=%v): %v,\n", typeOfU.Field(i).Name, tagExist, f.Interface())
 		} else {
 			fmt.Printf("%s: %v,\n", typeOfU.Field(i).Name, f.Interface())
 		}
@@ -41,9 +41,9 @@ func (a AnotherUnknownPlant) ReadWrite() {
 	typeOfU := s.Type()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
-		tagExist := typeOfU.Field(i).Tag.Get("color_scheme")
+		tagExist := typeOfU.Field(i).Tag.Get("unit")
 		if tagExist != "" {
-			fmt.Printf("%s(color_scheme=%v): %v,\n", typeOfU.Field(i).Name, tagExist, f.Interface())
+			fmt.Printf("%s(unit=%v): %v,\n", typeOfU.Field(i).Name, tagExist, f.Interface())
 		} else {
 			fmt.Printf("%s: %v,\n", typeOfU.Field(i).Name, f.Interface())
 		}

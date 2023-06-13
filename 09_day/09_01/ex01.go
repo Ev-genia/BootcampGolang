@@ -25,7 +25,7 @@ func getBody(url string, chanWrite chan<- *string) {
 		log.Fatal(err)
 	}
 	str := string(body)
-	log.Printf(str)
+	log.Printf(str[:20])
 	chanWrite <- &str
 }
 

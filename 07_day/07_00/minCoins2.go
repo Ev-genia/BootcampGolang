@@ -1,33 +1,69 @@
 package main
 
-type Change struct {
-	val   int
-	coins []int
-}
+import (
+	"fmt"
+	"sort"
+)
 
-func minCoins2(money int, coins []int) []int {
-	if money <= 0 {
-		return []int{}
-	}
-	arrVal := make([]Change, money+1)
-	for i := 0; i < money+1; i++ {
-		arrVal[i].val = i
-	}
-	for i := 0; i < money+1; i++ {
-		for _, coin := range coins {
-			if coin == arrVal[i].val {
-				arrVal[i].coins = []int{coin}
-				break
-			} else if coin < arrVal[i].val {
-				if len(arrVal[i].coins) == 0 || len(arrVal[i].coins) > len(arrVal[arrVal[i].val-coin].coins)+1 {
-					minArr := make([]int, len(arrVal[arrVal[i].val-coin].coins))
-					copy(minArr, arrVal[arrVal[i].val-coin].coins)
-					arrVal[i].coins = append(minArr, coin)
-				}
-			} else {
-				break
-			}
+// проверка вхождения числа в массив
+func FindInt(value int, coins *[]int) (int, int, bool) {
+	for i, val1 := range *coins {
+		if value == val1 {
+			return i, value, true
 		}
 	}
-	return arrVal[money].coins
+	return -1, -1, false
 }
+
+// Главная функция
+func minCoins2(val int, coins []int) []int {
+	rez := make([]int, 0, 200)
+	if val < 0 {
+		fmt.Print("Error: Negative value.\n")
+		return rez
+	} else if val == 0 {
+		return rez
+	}
+
+	var coinsValidated []int
+
+	for _, val1 := range coins {
+		_, _, isExist := FindInt(val1, &coinsValidated)
+		if !(isExist) {
+			coinsValidated = append(coinsValidated, val1)
+		}
+	}
+	sort.Ints(coinsValidated)
+	if coinsValidated[0] < 0 {
+		fmt.Print("Error: Negative denomination.\n")
+		return rez
+	}
+	var freqCoins [100]int
+
+	i := len(coinsValidated) - 1
+	for i >= 0 {
+		freqCoins[i] = val / coinsValidated[i]
+		if freqCoins[i] > 0 && i > 0 && val-coinsValidated[i]*(freqCoins[i]-1) == coinsValidated[i-1]*2 {
+			freqCoins[i] -= 1
+			freqCoins[i-1] = 2
+			break
+		}
+		val = val % coinsValidated[i]
+
+		i--
+	}
+	i = len(coinsValidated) - 1
+	for i >= 0 {
+		value := coinsValidated[i]
+		for j := 0; j < freqCoins[i]; j++ {
+			rez = append(rez, value)
+		}
+		i--
+	}
+	return rez
+
+}
+
+// func main() {
+// 	fmt.Println(minCoins2(7, []int{3, 1, 4, 3, 1}))
+// }

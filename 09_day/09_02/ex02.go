@@ -38,11 +38,11 @@ func main() {
 		intCh2 <- val
 	}
 
-	rezInt := multiplex(intCh, intCh2)
-	for i := 0; i < len(ints)+len(ints2); i++ {
-		fmt.Println(<-rezInt)
-	}
-	fmt.Println()
+	// rezInt := multiplex(intCh, intCh2)
+	// for i := 0; i < len(ints)+len(ints2); i++ {
+	// 	fmt.Println(<-rezInt)
+	// }
+	// fmt.Println()
 	strs := []string{"f", "ksf", "sjd"}
 	strI := make([]interface{}, len(strs))
 	for i, val := range strs {
@@ -63,8 +63,8 @@ func main() {
 		strCh <- val
 	}
 
-	rezStr := multiplex(strCh, strCh2)
-	for i := 0; i < len(strs)+len(strs2); i++ {
+	rezStr := multiplex(strCh, strCh2, intCh, intCh2)
+	for i := 0; i < len(strs)+len(strs2)+len(ints)+len(ints2); i++ {
 		fmt.Println(<-rezStr)
 	}
 }

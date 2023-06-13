@@ -3,7 +3,7 @@
 *.json
 *.xml
 no_*
-*test*
+# *test*
 myXargs
 myFind
 candyClient
@@ -20,3 +20,9 @@ amazingLogo
 *.png
 mlarra_web_site
 *.out
+botany
+arithmetic
+hotChocolate
+sleepsort
+spider-sense
+10_*

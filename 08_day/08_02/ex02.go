@@ -6,7 +6,6 @@ package main
 
 #include "window.h"
 #include "application.h"
-
 */
 import "C"
 import "unsafe"
